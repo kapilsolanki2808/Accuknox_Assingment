@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserModel,FriendRequestModel
+from .models import UserModel,FriendRequestModel, FriendList
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -7,8 +7,6 @@ class UserSerializer(serializers.ModelSerializer):
   class Meta:
     model = UserModel
     fields = ['id','name','email','password']
-
-
 
 class FriendRequestSerializer(serializers.ModelSerializer):
   class Meta:
@@ -18,4 +16,9 @@ class FriendRequestSerializer(serializers.ModelSerializer):
   def to_representation(self, instance):
         data = super(FriendRequestSerializer, self).to_representation(instance)
         data['request_to'] = instance.request_to.name       
-        return data  
+        return data 
+  
+class MyFriendListSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = FriendList
+      fields = '__all__'
