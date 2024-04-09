@@ -19,6 +19,8 @@ from django.urls import path,include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # path('api/auth/', include('allauth.urls')),  # Django Allauth endpoints
+    # # path('api/auth/registration/', include('rest_auth.registration.urls')),  # Registration endpoints
     path('social/', include('social.urls')),
 
 ]

@@ -8,32 +8,31 @@ class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+from django.db import models
+from django.conf import settings
 
-class UserModel(AbstractUser):
+class Profile(AbstractUser):
+    choice = (("MALE", "MALE"), ("FEMALE", "FEMALE"), ("OTHER", "OTHER"))
     username = models.CharField(max_length=250, null=True, blank=True, unique=True)
-    email = models.EmailField(max_length=255, unique=True)
-    name = models.CharField(max_length=255, null=True, blank=True)
+    name = models.CharField(max_length=100,null=True, blank=True)
+    email = models.EmailField(max_length=250, unique=True)
+    gender = models.CharField(max_length=250, default="", choices=choice)
 
-    USERNAME_FIELD = "email"
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
-
-    def __str__(self):
-        return str(self.name)
-
-
-choice = (("PENDING", "PENDING"), ("REJECT", "REJECT"), ("ACCEPTED", "ACCEPTED"))
 
 
 class FriendRequestModel(models.Model):
+    choice = (("PENDING", "PENDING"), ("REJECT", "REJECT"), ("ACCEPTED", "ACCEPTED"))
     request_from = models.ForeignKey(
-        UserModel,
+        Profile,
         on_delete=models.CASCADE,
         related_name="friend_request_from",
         null=True,
         blank=True,
     )
     request_to = models.ForeignKey(
-        UserModel,
+        Profile,
         on_delete=models.CASCADE,
         related_name="friend_request_to",
         null=True,
@@ -52,14 +51,14 @@ class FriendRequestModel(models.Model):
 
 class FriendList(models.Model):
     you = models.ForeignKey(
-        UserModel,
+        Profile,
         on_delete=models.CASCADE,
         related_name="friends",
         null=True,
         blank=True,
     )
     friend = models.ForeignKey(
-        UserModel,
+        Profile,
         on_delete=models.CASCADE,
         related_name="friend_of",
         null=True,

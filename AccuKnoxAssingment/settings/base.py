@@ -17,6 +17,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'social',
     'rest_framework',
+    # 'allauth',
+    # 'allauth.account',
+    # 'allauth.socialaccount',
 ]
 
 MIDDLEWARE = [
@@ -27,6 +30,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'AccuKnoxAssingment.urls'
@@ -68,7 +72,7 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'social.UserModel'
+AUTH_USER_MODEL = 'social.Profile'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -90,29 +94,58 @@ REST_FRAMEWORK = {
     # 'DEFAULT_FILTER_BACKENDS': [
     #     'django_filters.rest_framework.DjangoFilterBackend',
     # ],
+    # 'DEFAULT_AUTHENTICATION_CLASSES': [
+    #     'rest_framework.authentication.TokenAuthentication',
+    #     'rest_framework.authentication.SessionAuthentication',],
 }
 
-import sentry_sdk
-from sentry_sdk.integrations.gcp import GcpIntegration
+# import sentry_sdk
+# from sentry_sdk.integrations.gcp import GcpIntegration
 
-sentry_sdk.init(
-    dsn="https://682afeea9630a00124215ba4ccaecbe6@o4507021880524800.ingest.us.sentry.io/4507021889437696",
-    integrations=[GcpIntegration()],
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
-)
+# sentry_sdk.init(
+#     dsn="https://682afeea9630a00124215ba4ccaecbe6@o4507021880524800.ingest.us.sentry.io/4507021889437696",
+#     integrations=[GcpIntegration()],
+#     # Set traces_sample_rate to 1.0 to capture 100%
+#     # of transactions for performance monitoring.
+#     traces_sample_rate=1.0,
+#     # Set profiles_sample_rate to 1.0 to profile 100%
+#     # of sampled transactions.
+#     # We recommend adjusting this value in production.
+#     profiles_sample_rate=1.0,
+# )
 
-def http_function_entrypoint(request):
-    ...
+# def http_function_entrypoint(request):
+#     ...
 
-sentry_sdk.init(
-    dsn="https://682afeea9630a00124215ba4ccaecbe6@o4507021880524800.ingest.us.sentry.io/4507021889437696",
-    integrations=[
-        GcpIntegration(timeout_warning=True),
-    ],
-)
+# sentry_sdk.init(
+#     dsn="https://682afeea9630a00124215ba4ccaecbe6@o4507021880524800.ingest.us.sentry.io/4507021889437696",
+#     integrations=[
+#         GcpIntegration(timeout_warning=True),
+#     ],
+# )
+
+# ACCOUNT_FORMS = {
+#     'signup': 'social.forms.CustomSignupForm',
+# }
+
+# ACCOUNT_EMAIL_REQUIRED = True
+# ACCOUNT_USERNAME_REQUIRED = True
+# ACCOUNT_LOGOUT_REDIRECT_URL ='/accounts/login/'
+# ACCOUNT_SIGNUP_REDIRECT_URL ='/accounts/login/'
+
+AUTH_USER_MODEL = 'social.Profile'
+import logging
+
+# Configure logging settings
+logging.basicConfig(filename='error.log', level=logging.ERROR,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Create a logger object
+logger = logging.getLogger('my_logger')
+
+try:
+    # Code that may raise an error
+    result = 2 / 0
+except Exception as e:
+    # Log the error
+    logger.error("An error occurred: %s", str(e))

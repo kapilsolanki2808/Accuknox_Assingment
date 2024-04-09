@@ -19,7 +19,7 @@ class RegisterUserView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        queryset = UserModel.objects.all()
+        queryset = Profile.objects.all()
         serializer = UserSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -48,12 +48,10 @@ class Login(APIView):
         return Response({"failed": "Login failed"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-
-
 class UserSearchAPIView(generics.ListAPIView):
     pagination_class = PageNumberPagination
     page_size = 10
-    queryset = UserModel.objects.all()
+    queryset = Profile.objects.all()
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ["name__icontains", "=email"]
@@ -71,22 +69,29 @@ class SendFriendRequestAPIView(APIView):
         request_to = request.data.get("request_to")
         serializer = FriendRequestSerializer(data=request.data)
         if serializer.is_valid():
-            req = serializer.save()
+            data = serializer.validated_data
+            req = FriendRequestModel(**data)
             req.request_from = request.user
-            if request_to == request.user.id:
-                return Response("can not send friend request to yourself")
-            if (
-                not FriendRequestModel.objects.filter(
+            queryset_ = FriendRequestModel.objects.filter(
+                Q(request_from=request.user)
+                & Q(request_to=request_to)
+                & Q(status="REJECT")
+            )
+            if not queryset_:
+                if request_to == request.user.id:
+                    return Response("can not send friend request to yourself")
+                if not FriendRequestModel.objects.filter(
                     request_to=request.user, request_from=request_to
-                ).exists()):
-                queryset = FriendRequestModel.objects.filter(
-                    request_from=request.user, request_to=request_to
-                ).first()
-                if not queryset:
-                    req.save()
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                return Response("all ready exist")
-            return Response(f"you have friend request from {request_to} ")
+                ).exists():
+                    queryset = FriendRequestModel.objects.filter(
+                        request_from=request.user, request_to=request_to
+                    ).first()
+                    if not queryset:
+                        req.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response("all ready exist")
+                return Response(f"you have friend request from {request_to} ")
+            return Response({"status" :"can not send friend request beacuse he/she allready rejected your request"})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -113,31 +118,22 @@ class AcceptOrRejectFriendRequestAPIView(APIView):
         if serializer.is_valid():
             status_value = serializer.validated_data.get("status")
             if status_value == "ACCEPTED":
-                # Create FriendList object
-                FriendList.objects.create(you=friend_request.request_from, friend=friend_request.request_to)
-            serializer.save()
-            del_reject_request = FriendRequestModel.objects.filter(status="REJECT")
+                # Create FriendList object 
+                FriendList.objects.create(
+                    you=friend_request.request_from, friend=friend_request.request_to
+                )
+                serializer.save()
+                friend_request.delete()
 
-            del_reject_request.delete()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    # def patch(self, request, id):
-    #     friend_request = get_object_or_404(FriendRequestModel, id=id)
-    #     serializer = FriendRequestSerializer(
-    #         instance=friend_request, data=request.data, partial=True
-    #     )
-    #     if serializer.is_valid():
-    #         status_value = serializer.validated_data.get("status")
-    #         if status_value == "Accepted":
-    #             # Create FriendList object
-    #             FriendList.objects.create(you=friend_request.from_user, friend=friend_request.to_user)
-            
-    #         serializer.save()
-    #         # Delete rejected friend requests
-    #         del_reject_request = FriendRequestModel.objects.filter(status="REJECT")
-    #         del_reject_request.delete()
-    #         return Response(serializer.data, status=status.HTTP_200_OK)
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
+                return Response(
+                    {"status": "ACCEPTED friend request"}, status=status.HTTP_200_OK
+                )
+            serializer.save()
+            if status_value == "REJECT":
+                return Response({"status": "REJECT friend request"})
+            if status_value == "PENDING":
+                return Response({"status": "PENDING friend request"})
+        return Response(serializer.errors, status=status.HTTP_204_NO_CONTENT)
 
 class AcceptedFriendRequest(APIView):
     permission_classes = [IsAuthenticated]
@@ -152,6 +148,8 @@ class AcceptedFriendRequest(APIView):
 
 class MyFriendListView(APIView):
     def get(self, request):
-        queryset = FriendList.objects.filter(Q(you=request.user)| Q(friend = request.user))
+        queryset = FriendList.objects.filter(
+            Q(you=request.user) | Q(friend=request.user)
+        )
         serializers = MyFriendListSerializer(queryset, many=True)
         return Response(serializers.data, status=status.HTTP_200_OK)
