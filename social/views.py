@@ -7,11 +7,10 @@ from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
 from .models import *
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.throttling import UserRateThrottle
 import django_filters
 from rest_framework import filters
 from rest_framework import status, generics
-
+from .throttles import FriendRequestThrottle
 # Create your views here.
 
 
@@ -57,8 +56,7 @@ class UserSearchAPIView(generics.ListAPIView):
     search_fields = ["name__icontains", "=email"]
 
 
-class FriendRequestThrottle(UserRateThrottle):
-    scope = "friend_request"
+
 
 
 class SendFriendRequestAPIView(APIView):
